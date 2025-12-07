@@ -73,16 +73,23 @@ public class RobotBumbleBotOpMode extends LinearOpMode {
     private DcMotor motorRight = null;
     private ElapsedTime timer = new ElapsedTime();
     boolean OuttakeToggle = false;
+//    boolean RevolverToggle = false;
     public void IntakeTrigger(){
         if (gamepad1.a && !IntakeToggle) {
             IntakeToggle = true;
+//            RevolverToggle = true;
             timer.reset();
         }
 
         if (IntakeToggle) {
             motorLeft.setPower(1.0);
             motorRight.setPower(1.0);
-            determineColor();
+//            determineColor();
+
+//            if (timer.seconds() >= 0.05 && RevolverToggle) {
+//                setRevolverPosition(3);
+//                RevolverToggle = false;
+//            }
 
             if (timer.seconds() >= 5) {
                 motorLeft.setPower(0.0);
@@ -135,7 +142,7 @@ public class RobotBumbleBotOpMode extends LinearOpMode {
     // Revolver Variables and Function
     private DcMotor revolverMotor = null;
     int revolverTicks = 538;
-    int revolverTarget;
+    int revolverTarget = 0;
     boolean revolverInput;
     boolean revolverToggle;
     public void setRevolverPosition (int positions){
@@ -143,37 +150,32 @@ public class RobotBumbleBotOpMode extends LinearOpMode {
         revolverTarget += revolverTicks/positions;
         revolverMotor.setTargetPosition(revolverTarget);
         revolverMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        revolverMotor.setPower(-0.3);
-        revolverMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        revolverMotor.setPower(-1);
     }
     public void revolverTrigger(){
         if (gamepad1.x && !revolverInput) {
-            revolverToggle = !revolverToggle;
-
-            if (revolverToggle) {
-                setRevolverPosition(3);
-            }
+            setRevolverPosition(3);
         }
         revolverInput = gamepad1.x;
     }
     // Color sensor variables and functions
     final float[] hsvValues = new float[3];
     String colorName = "";
-    NormalizedColorSensor colorSensor;
+//    NormalizedColorSensor colorSensor;
 
-    public void determineColor(){
-        NormalizedRGBA colors = colorSensor.getNormalizedColors();
-        Color.colorToHSV(colors.toColor(), hsvValues);
-
-        if(colors.blue > colors.green && colors.blue > colors.red){
-            colorName = "Purple";
-
-
-        }else if(colors.green > colors.red && colors.green > colors.blue){
-            colorName = "Green";
-
-        }
-    }
+//    public void determineColor(){
+//        NormalizedRGBA colors = colorSensor.getNormalizedColors();
+//        Color.colorToHSV(colors.toColor(), hsvValues);
+//
+//        if(colors.blue > colors.green && colors.blue > colors.red){
+//            colorName = "Purple";
+//
+//
+//        }else if(colors.green > colors.red && colors.green > colors.blue){
+//            colorName = "Green";
+//
+//        }
+//    }
 
 
 
@@ -200,14 +202,14 @@ public class RobotBumbleBotOpMode extends LinearOpMode {
         // Initialization of Servo
         servoSort = hardwareMap.get(Servo.class, "SortingServo");
         servoSort.setDirection(Servo.Direction.FORWARD);
-        servoSort.scaleRange(0.0, 1.00);
+        servoSort.scaleRange(0.0, 0.4);
         servoSort.setPosition(servoPosition);
         // Initialization of Revolver Motor
         revolverMotor = hardwareMap.get(DcMotor.class, "RevolverMotor");
         revolverMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         revolverMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         // Initialization for Color Sensor
-        colorSensor = hardwareMap.get(NormalizedColorSensor.class, "sensor_color");
+//        colorSensor = hardwareMap.get(NormalizedColorSensor.class, "sensor_color");
 
         timer.reset();
         telemetry.addData("Status: ", "Initialized");
