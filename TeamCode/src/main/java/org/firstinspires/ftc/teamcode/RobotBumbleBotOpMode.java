@@ -5,6 +5,9 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.hardware.Servo;
+import android.graphics.Color;
+import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
+import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 
 
 @TeleOp(name = "Robot: BumbleBotOpModeV2", group = "LinearOpMode")
@@ -19,9 +22,10 @@ public class RobotBumbleBotOpMode extends LinearOpMode {
     public void DriveTrain(){
         double max;
 
-        double axial   = -gamepad2.left_stick_y;  // Note: pushing stick forward gives negative value
-        double lateral =  gamepad2.left_stick_x;
-        double yaw     =  gamepad2.right_stick_x;
+
+        double axial   = gamepad1.left_stick_y;  // Note: pushing stick forward gives negative value
+        double lateral =  gamepad1.left_stick_x;
+        double yaw     =  gamepad1.right_stick_x;
 
         double frontLeftPower  = axial + lateral + yaw;
         double frontRightPower = axial - lateral - yaw;
@@ -38,10 +42,10 @@ public class RobotBumbleBotOpMode extends LinearOpMode {
             backLeftPower   /= max;
             backRightPower  /= max;
         }
-        frontLeftDrive.setPower(frontLeftPower);
-        frontRightDrive.setPower(frontRightPower);
-        backLeftDrive.setPower(backLeftPower);
-        backRightDrive.setPower(backRightPower);
+        frontLeftDrive.setPower(frontLeftPower * 0.5);
+        frontRightDrive.setPower(frontRightPower * 0.5);
+        backLeftDrive.setPower(backLeftPower * 0.5);
+        backRightDrive.setPower(backRightPower * 0.5);
     }
 
 
@@ -78,6 +82,7 @@ public class RobotBumbleBotOpMode extends LinearOpMode {
         if (IntakeToggle) {
             motorLeft.setPower(1.0);
             motorRight.setPower(1.0);
+            determineColor();
 
             if (timer.seconds() >= 5) {
                 motorLeft.setPower(0.0);
@@ -135,10 +140,11 @@ public class RobotBumbleBotOpMode extends LinearOpMode {
     boolean revolverToggle;
     public void setRevolverPosition (int positions){
 
-        revolverTarget += revolverTicks / positions;
+        revolverTarget += revolverTicks/positions;
         revolverMotor.setTargetPosition(revolverTarget);
         revolverMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         revolverMotor.setPower(-0.3);
+        revolverMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
     }
     public void revolverTrigger(){
         if (gamepad1.x && !revolverInput) {
@@ -150,7 +156,24 @@ public class RobotBumbleBotOpMode extends LinearOpMode {
         }
         revolverInput = gamepad1.x;
     }
+    // Color sensor variables and functions
+    final float[] hsvValues = new float[3];
+    String colorName = "";
+    NormalizedColorSensor colorSensor;
 
+    public void determineColor(){
+        NormalizedRGBA colors = colorSensor.getNormalizedColors();
+        Color.colorToHSV(colors.toColor(), hsvValues);
+
+        if(colors.blue > colors.green && colors.blue > colors.red){
+            colorName = "Purple";
+
+
+        }else if(colors.green > colors.red && colors.green > colors.blue){
+            colorName = "Green";
+
+        }
+    }
 
 
 
@@ -183,6 +206,8 @@ public class RobotBumbleBotOpMode extends LinearOpMode {
         revolverMotor = hardwareMap.get(DcMotor.class, "RevolverMotor");
         revolverMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         revolverMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        // Initialization for Color Sensor
+        colorSensor = hardwareMap.get(NormalizedColorSensor.class, "sensor_color");
 
         timer.reset();
         telemetry.addData("Status: ", "Initialized");
@@ -194,11 +219,12 @@ public class RobotBumbleBotOpMode extends LinearOpMode {
 
 
             DriveTrain();
+            IntakeTrigger();
             revolverTrigger();
             servoTrigger();
             outtakeSpeedControl();
             outtakeTrigger();
-            IntakeTrigger();
+
 
 
 
@@ -209,6 +235,7 @@ public class RobotBumbleBotOpMode extends LinearOpMode {
             telemetry.addData("Outtake Power", motorPower);
             telemetry.addData("Servo Position", servoPosition);
             telemetry.addData("Revolver Tick", revolverTarget);
+            telemetry.addData("Color of Artifact", "Green");
             telemetry.update();
         }
 
